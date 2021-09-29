@@ -8,20 +8,20 @@ namespace PhotoEditor
 {
     public partial class MainForm : Form
     {
-        private Image image;
+        private Image _image;
         private int _currentWidth;
         private int _currentHeight;
         private int _staticWidth;
         private int _staticHeight;
         private float _scaleImage = 100;
-        string fileName;
+        string _fileName;
 
         private Bitmap ResizeNow(int targetWidth, int targetHeight)
         {
             Rectangle destRect = new Rectangle(0, 0, targetWidth, targetHeight);
             Bitmap destImage = new Bitmap(targetWidth, targetHeight);
 
-            destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
+            destImage.SetResolution(_image.HorizontalResolution, _image.VerticalResolution);
             using (var g = Graphics.FromImage(destImage))
             {
                 g.CompositingMode = CompositingMode.SourceCopy;
@@ -32,7 +32,7 @@ namespace PhotoEditor
                 using (var wrapmode = new ImageAttributes())
                 {
                     wrapmode.SetWrapMode(WrapMode.TileFlipXY);
-                    g.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapmode);
+                    g.DrawImage(_image, destRect, 0, 0, _image.Width, _image.Height, GraphicsUnit.Pixel, wrapmode);
                 }
             }
 
@@ -50,32 +50,35 @@ namespace PhotoEditor
 
             try
             {
-                if (image != null)
+                if (_image != null)
                 {
-                    image = null;
+                    _image = null;
                 }
-                image = Image.FromFile(openDialog.FileName);
-                image = new Bitmap(openDialog.FileName);
-                fileName = openDialog.FileName;
-                _currentWidth = image.Width;
-                _currentHeight = image.Height;
+                _image = Image.FromFile(openDialog.FileName);
+                _image = new Bitmap(openDialog.FileName);
+                _fileName = openDialog.FileName;
+                _currentWidth = _image.Width;
+                _currentHeight = _image.Height;
+
+                float v = 1;
+                float g = 1;
 
                 if (_currentHeight >= panelImage.Size.Height)
                 {
-                    float v = (int)Math.Pow(10, (image.Height.ToString().Length - 1));
-                    float g = panelImage.Size.Height / (image.Height / v) / v;
-                    _currentWidth = _staticWidth = Convert.ToInt32(Convert.ToDouble(image.Width) * Convert.ToDouble(g));
-                    _currentHeight = _staticHeight = Convert.ToInt32(Convert.ToDouble(image.Height) * Convert.ToDouble(g));
+                    v = (int)Math.Pow(10, (_image.Height.ToString().Length - 1));
+                    g = panelImage.Size.Height / (_image.Height / v) / v;
                 }
 
                 if (_currentWidth >= panelImage.Size.Width)
                 {
-                    float v = (int)Math.Pow(10, (image.Width.ToString().Length - 1));
-                    float g = panelImage.Size.Width / (image.Width / v) / v;
-                    _currentWidth = _staticWidth = Convert.ToInt32(Convert.ToDouble(image.Width) * Convert.ToDouble(g));
-                    _currentHeight = _staticHeight = Convert.ToInt32(Convert.ToDouble(image.Height) * Convert.ToDouble(g));
+                    v = (int)Math.Pow(10, (_image.Width.ToString().Length - 1));
+                    g = panelImage.Size.Width / (_image.Width / v) / v;
                 }
-                pictureBoxImage.Image = image;
+
+                _currentWidth = _staticWidth = Convert.ToInt32(Convert.ToDouble(_image.Width) * Convert.ToDouble(g));
+                _currentHeight = _staticHeight = Convert.ToInt32(Convert.ToDouble(_image.Height) * Convert.ToDouble(g));
+
+                pictureBoxImage.Image = _image;
                 pictureBoxImage.Image = ResizeNow(_currentWidth, _currentHeight);
                 _scaleImage = 100;
 
@@ -89,18 +92,18 @@ namespace PhotoEditor
 
         private void ImageRotation(RotateFlipType rotateFlipType)
         {
-            if (image == null)
+            if (_image == null)
             {
                 MessageBox.Show("Image is not open. Select image!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            image.RotateFlip(rotateFlipType);
+            _image.RotateFlip(rotateFlipType);
             pictureBoxImage.Image = ResizeNow(_currentWidth, _currentHeight);
         }
 
         private void ChangeSize(float scaleImage)
         {
-            if (image == null)
+            if (_image == null)
             {
                 MessageBox.Show("Image is not open. Select image!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -165,14 +168,14 @@ namespace PhotoEditor
             DialogResult dialogResult = MessageBox.Show("Do you want to save the file?", "Save", MessageBoxButtons.YesNo);
             if (dialogResult == DialogResult.Yes)
             {
-                if (image == null || fileName == null)
+                if (_image == null || _fileName == null)
                 {
                     MessageBox.Show("Image is not open. Select image!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
                 using (Bitmap bmb = (Bitmap)pictureBoxImage.Image.Clone())
                 {
-                    bmb.Save(@"" + fileName, bmb.RawFormat);
+                    bmb.Save(@"" + _fileName, bmb.RawFormat);
                 }
             }
             else if (dialogResult == DialogResult.No)
@@ -183,7 +186,7 @@ namespace PhotoEditor
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (image == null || fileName == null)
+            if (_image == null || _fileName == null)
             {
                 MessageBox.Show("Image is not open. Select image!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
